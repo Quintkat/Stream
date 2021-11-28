@@ -197,10 +197,5 @@ class MainWindow(Tk):
 		self.checkRelated = check
 		check.grid(column=1, row=3, sticky='e')
 
-		# text = Text(self, width=62, padx=2, height=1)
-		# self.textRelated = text
-		# text.grid(column=1, row=4, sticky='e')
-
-
 
 main = MainWindow()
