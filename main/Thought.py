@@ -61,13 +61,22 @@ class Thought:
 		self.data["related"] = related
 
 	def addRelated(self, related : Thought):
-		if related not in self.data["related"]:
+		if related not in self.data["related"] and related.id != self.id():
 			self.data["related"].append(related)
 			related.addOffspring(self)
 
 	def addRelatedList(self, related : List[Thought]):
 		for r in related:
 			self.addRelated(r)
+
+	def removeRelated(self, related : Thought):
+		if related in self.data["related"]:
+			related.removeOffspring(self.id())
+			self.data["related"].remove(related)
+
+	def removeRelatedList(self, related: List[Thought]):
+		for rel in related:
+			self.removeRelated(rel)
 
 	def related(self) -> List[Thought]:
 		return self.data["related"]
@@ -83,7 +92,7 @@ class Thought:
 		for o in offspring:
 			self.addOffspring(o)
 
-	def removeOffspring(self, ID):
+	def removeOffspring(self, ID : int):
 		for o in range(len(self.offspring())):
 			offspring = self.offspring()[o]
 			if offspring.id() == ID:
@@ -93,8 +102,11 @@ class Thought:
 	def offspring(self) -> List[Thought]:
 		return self.data["offspring"]
 
+	def strIDDatetime(self):
+		return "Thought " + str(self.id()) + " at " + self.timeStr()
+
 	def __str__(self):
-		output = "Thought " + str(self.id()) + " at " + self.timeStr() + ": " + self.text()
+		output = self.strIDDatetime()+ ": " + self.text()
 		if len(self.related()) > 0:
 			output += "; Related to thoughts "
 			output += str(self.related()[0].id())

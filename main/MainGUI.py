@@ -1,31 +1,47 @@
 from tkinter import *
 from tkinter import ttk
+# from ttkthemes import themed_tk as tk
 
 from Thought import Thought
-from Stream import Stream
+from Stream import Stream, getAllStreamNames
 
 
 class MainWindow(Tk):
 	# Default settings
-	wWidth = 1024
-	wHeight = 600
+	wWidth = 1040
+	wHeight = 605
 	wOffsetX = 450
 	wOffsetY = 200
 	wTitle = "Stream"
 
+	# Style settings
+	cText = "black"
+	cGhostText = "grey"
+
 	# GUI elements
-	lStart = 0
-	lEnd = 200
-	rStart = 200
-	rEnd = 1024
 	padX = 5
 	padY = 5
-	entryStream : Entry
+	frameTable : Frame
+	entryThought : Entry
 	tableStream : ttk.Treeview
+	frameLeft : Frame
+	frameThought : LabelFrame
 	textThought : Text
 	buttonDelete : Button
 	checkRelated : Checkbutton
-	textRelated : Text
+	frameStream : LabelFrame
+	entryStream : Entry
+	labelStream : Label
+	optionStream : OptionMenu
+	buttonStream : Button
+	buttonRelatedShow : Button
+	buttonRelatedAdd : Button
+	buttonRelatedRemove : Button
+	buttonOffspringShow : Button
+	labelThought : Label
+
+	# Stream vars
+	optionStreamVal : StringVar
 
 	# TableStream settings
 	tableStreamColumns : list[str] = ["date", "time", "thought"]
@@ -33,9 +49,20 @@ class MainWindow(Tk):
 	# Stream saves
 	stream : Stream
 	streamDefault : str = "default"
+	streamNameList : list[str]
 
 	# CheckRelated vars
 	checkRelatedVal : IntVar
+
+	# Thought frame vars
+	displayIDNone : int = -1
+	displayID : int = displayIDNone
+	addingRelated : bool = False
+	removingRelated : bool = False
+	addRelatedText = {False : "Add related", True : "Add selection"}
+	removeRelatedText = {False : "Remove related", True : "Remove selection"}
+	labelThoughtVal : StringVar
+	noThoughtSelected : str = "No thought selected"
 
 	def __init__(self):
 		super().__init__()
@@ -52,15 +79,97 @@ class MainWindow(Tk):
 	def environmentSetup(self):
 		self.stream = Stream(self.streamDefault)
 		self.stream.loadFromJSON()
-		self.tableSetup()
+		# self.frameLeftSetup()
+		self.frameStreamSetup()
+		self.frameThoughtSetup()
+		self.frameTableSetup()
+
+	# def frameLeftSetup(self):
+	# 	frame = Frame(self)
+	# 	self.frameLeft = frame
+	# 	frame.grid(column=0, row=1, rowspan=2)
+	#
+	# 	self.frameStreamSetup()
+	# 	self.frameThoughtSetup()
+
+	def frameStreamSetup(self):
+		frame = LabelFrame(self, text="Stream")
+		self.frameStream = frame
+		frame.grid(column=0, row=1, padx=self.padX, pady=self.padY, sticky='ewn')
+		# frame.pack(side="top")
+
 		self.entryStreamSetup()
-		self.textThoughSetup()
-		self.buttonDeleteSetup()
+		self.labelStreamSetup()
+		self.optionStreamSetup()
+		self.buttonStreamSetup()
+
+	def entryStreamSetup(self):
+		entry = Entry(self.frameStream, exportselection=0, width=30)
+		self.entryStream = entry
+		entry.grid(column=0, row=0, columnspan=2, padx=self.padX, pady=self.padY, sticky='ew')
+		entry.bind("<FocusIn>", self.entryStreamFocusIn)
+		entry.bind("<FocusOut>", self.entryStreamFocusOut)
+		entry.bind("<Return>", self.entryCreateStream)
+		self.entryStreamFocusOut(0)
+
+	def entryStreamFocusIn(self, a):
+		if self.entryStream["fg"] == self.cGhostText:
+			self.entryStream.delete(0, END)
+			self.entryStream.config(fg=self.cText)
+
+	def entryStreamFocusOut(self, a):
+		text = self.entryStream.get()
+		if text == "":
+			self.entryStream.delete(0, END)
+			self.entryStream.config(fg=self.cGhostText)
+			self.entryStream.insert(0, "New Stream")
+
+	def entryCreateStream(self, a):
+		pass
+
+	def labelStreamSetup(self):
+		label = Label(self.frameStream, text="Current Stream:")
+		self.labelStream = label
+		label.grid(column=0, row=1, sticky="w", padx=self.padX, pady=self.padY)
+
+	def optionStreamSetup(self):
+		self.updateStreamNameList()
+		self.optionStreamVal = StringVar()
+		self.optionStreamVal.set(self.streamNameList[0])
+		option = OptionMenu(self.frameStream, self.optionStreamVal, *self.streamNameList, command=self.displayStreamOption)
+		self.optionStream = option
+		option.grid(column=1, row=1, padx=self.padX, pady=self.padY)
+		option.config(width=10)
+
+	def updateStreamNameList(self):
+		self.streamNameList = getAllStreamNames()
+
+	def displayStreamOption(self, a):
+		streamName = self.optionStreamVal.get()
+		print(streamName)
+		pass
+
+	def buttonStreamSetup(self):
+		button = Button(self.frameStream, text="Refresh Stream", command=self.buttonStreamRefresh)
+		self.buttonStream = button
+		button.grid(column=0, row=2, columnspan=2, sticky="ew", padx=2*self.padX, pady=self.padY)
+
+	def buttonStreamRefresh(self):
+		self.updateTable()
+
+
+	def frameTableSetup(self):
+		frame = Frame(self)
+		self.frameTable = frame
+		frame.grid(column=1, row=1, padx=self.padX, pady=self.padY, rowspan=2)
+		# frame.pack(side="right", fill='x')
+
+		self.tableSetup()
+		self.entryThoughtSetup()
 		self.relatedSetup()
 
-
 	def tableSetup(self):
-		table = ttk.Treeview(self)
+		table = ttk.Treeview(self.frameTable)
 		self.tableStream = table
 
 		# Columns
@@ -68,7 +177,7 @@ class MainWindow(Tk):
 		table.column("#0", anchor=W, width=50, minwidth=50)
 		table.column("date", anchor=CENTER, width=60, minwidth=60)
 		table.column("time", anchor=CENTER, width=60, minwidth=60)
-		table.column("thought", anchor=W, width=625, minwidth=500)
+		table.column("thought", anchor=W, width=600, minwidth=500)
 
 		# Headings
 		table.heading("#0", text="#")
@@ -80,26 +189,27 @@ class MainWindow(Tk):
 		self.updateTable()
 
 		# Positioning
-		table.pack()
-		table.grid(column=1, row=1, padx=self.padX, pady=0, rowspan=2)
+		table.grid(column=0, row=0, padx=self.padX, pady=0, columnspan=2)
 
 		# Binding
-		table.bind("<ButtonRelease-1>", self.updateTextThought)
+		table.bind("<ButtonRelease-1>", self.tableButtonRelease)
 
 		# Settings
 		# table["selectmode"] = "browse"
 		table["height"] = 27
 
-		# Scrollbar - Not strictly necessary, as the treeview can scroll on it's own
-		# scroll = ttk.Scrollbar(self, orient="vertical", command=table.yview)
-		# scroll.grid(column=1, row=1, rowspan=2, sticky='ns')
-
-	def updateTable(self):
+	def updateTable(self, query : list[int] = None):
 		table = self.tableStream
 		for item in table.get_children():
 			table.delete(item)
 
-		thoughts : dict[int, Thought] = self.stream.getThoughts()
+		thoughts : dict[int, Thought] = {}
+		if query is None:
+			thoughts = self.stream.getThoughts()
+		else:
+			for ID in query:
+				thoughts[ID] = self.stream.getThought(ID)
+
 		for tID in thoughts:
 			thought = thoughts[tID]
 			info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
@@ -110,6 +220,16 @@ class MainWindow(Tk):
 		info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
 		self.tableStream.insert(parent='', index='end', iid=thought.id(), text=str(thought.id()), values=info)
 
+	def tableButtonRelease(self, a):
+		if self.addingRelated:
+			# self.manipulateRelated()
+			pass
+		elif self.removingRelated:
+			# self.manipulateRelated()
+			pass
+		else:
+			self.updateTextThought(0)
+
 	def getSelectedIDs(self) -> list[int]:
 		# TODO: extend later with child formatting
 		s = []
@@ -117,16 +237,15 @@ class MainWindow(Tk):
 			s.append(int(ID))
 		return s
 
-
-	def entryStreamSetup(self):
-		entry = Entry(self, exportselection=0, width=110)
-		entry.grid(column=1, row=3, sticky='w', padx=self.padX, pady=self.padY)
+	def entryThoughtSetup(self):
+		entry = Entry(self.frameTable, exportselection=0, width=106)
+		entry.grid(column=0, row=1, sticky='w', padx=self.padX, pady=self.padY)
 		entry.bind("<Return>", self.entryCreateThought)
-		self.entryStream = entry
+		self.entryThought = entry
 
 	def entryCreateThought(self, a):
 		# Create the thought
-		text = self.entryStream.get()
+		text = self.entryThought.get()
 		related = None
 		if self.checkRelatedVal.get() == 1:
 			related = []
@@ -141,26 +260,46 @@ class MainWindow(Tk):
 
 		# Update the table
 		self.updateTableSingle(thought.id())
-		self.entryStream.delete(0, len(text))
+		self.entryThought.delete(0, END)
+
+	def relatedSetup(self):
+		self.checkRelatedVal = IntVar()
+		check = Checkbutton(self.frameTable, text="Related to selection", variable=self.checkRelatedVal)
+		self.checkRelated = check
+		check.grid(column=1, row=1, sticky='e')
 
 
-	def textThoughSetup(self):
-		text = Text(self, width=25, padx=2, height=1)
+	def frameThoughtSetup(self):
+		frame = LabelFrame(self, text="Thought")
+		self.frameThought = frame
+		frame.grid(column=0, row=2, padx=self.padX, pady=self.padY, sticky='ns')
+		# frame.pack(side="bottom", expand=True)
+
+		self.textThoughtSetup()
+		self.buttonDeleteSetup()
+		self.buttonRelatedShowSetup()
+		self.buttonRelatedAddSetup()
+		self.buttonRelatedRemoveSetup()
+		self.labelThoughtSetup()
+
+	def textThoughtSetup(self):
+		text = Text(self.frameThought, width=25, padx=2, height=18)
 		self.textThought = text
-		text.grid(column=0, row=2, sticky='ns', padx=self.padX)
+		text.grid(column=0, row=3, columnspan=2, sticky='ns', padx=self.padX, pady=self.padY)
 		text.insert(END, "uwu")
 		text.bind("<Return>", self.textThoughtUpdate)
 
 	def updateTextThought(self, a):
 		selection = self.getSelectedIDs()
-		if len(selection) == 0:
-			self.textThought.delete(1.0, END)
 
 		if len(selection) == 1:
 			self.textThought.delete(1.0, END)
-			ID = int(selection[0])
-			thought : Thought = self.stream.getThought(ID)
+			self.displayID = int(selection[0])
+			thought : Thought = self.stream.getThought(self.displayID)
 			self.textThought.insert(1.0, thought.text())
+
+			# Update label
+			self.labelThoughtVal.set(thought.strIDDatetime())
 
 	def textThoughtUpdate(self, a):
 		selection = self.getSelectedIDs()
@@ -173,11 +312,10 @@ class MainWindow(Tk):
 			self.textThought.delete(1.0, END)							# Re-update the text with the updated text
 			self.textThought.insert(1.0, thought.text())
 
-
 	def buttonDeleteSetup(self):
-		button = Button(self, text="Delete Thought", command=self.deleteThought)
+		button = Button(self.frameThought, text="Delete Thought", command=self.deleteThought)
 		self.buttonDelete = button
-		button.grid(column=0, row=3, sticky='ew', padx=2*self.padX, pady=self.padY)
+		button.grid(column=0, row=4, columnspan=2, sticky='ews', padx=2*self.padX, pady=self.padY)
 
 	def deleteThought(self):
 		selection = self.getSelectedIDs()
@@ -190,12 +328,79 @@ class MainWindow(Tk):
 		self.stream.saveToJSON()
 		self.updateTable()
 
+	def labelThoughtSetup(self):
+		self.labelThoughtVal = StringVar()
+		self.labelThoughtVal.set(self.noThoughtSelected)
+		label = Label(self.frameThought, textvariable=self.labelThoughtVal, anchor='w')
+		self.labelThought = label
+		label.grid(column=0, row=2, columnspan=2, sticky='ew', padx=self.padX, pady=self.padY)
 
-	def relatedSetup(self):
-		self.checkRelatedVal = IntVar()
-		check = Checkbutton(self, text="Related to selection", variable=self.checkRelatedVal)
-		self.checkRelated = check
-		check.grid(column=1, row=3, sticky='e')
+	def buttonRelatedShowSetup(self):
+		button = Button(self.frameThought, text="Show related", command=self.showRelated)
+		self.buttonRelatedShow = button
+		button.grid(column=0, row=0, columnspan=2, sticky='ew', padx=self.padX, pady=self.padY)
+
+	def buttonRelatedAddSetup(self):
+		button = Button(self.frameThought, text=self.addRelatedText[False], command=self.addRelatedButton)
+		self.buttonRelatedAdd = button
+		button.grid(column=0, row=1, sticky='ew', padx=self.padX, pady=self.padY)
+
+	def buttonRelatedRemoveSetup(self):
+		button = Button(self.frameThought, text=self.removeRelatedText[False], command=self.removeRelatedButton)
+		self.buttonRelatedRemove = button
+		button.grid(column=1, row=1, sticky='ew', padx=self.padX, pady=self.padY)
+
+	def buttonOffspringShowSetup(self):
+		button = Button(self.frameThought, text="Show related to this")
+		self.buttonRelatedAdd = button
+		button.grid(column=0, row=1, sticky='ew', padx=self.padX, pady=self.padY)
+
+	def showRelated(self):
+		if self.displayID != self.displayIDNone:
+			thought = self.stream.getThought(self.displayID)
+			rel = thought.related()
+			relIDs = []
+			for r in rel:
+				relIDs.append(r.id())
+
+			self.updateTable(relIDs)
+
+	def addRelatedButton(self):
+		if not self.removingRelated:
+			if self.addingRelated:
+				self.manipulateRelated()
+				self.addingRelated = False
+			else:
+				self.addingRelated = True
+			self.buttonRelatedAdd.config(text=self.addRelatedText[self.addingRelated])
+
+	def removeRelatedButton(self):
+		if not self.addingRelated:
+			if self.removingRelated:
+				self.manipulateRelated()
+				self.removingRelated = False
+			else:
+				self.removingRelated = True
+			self.buttonRelatedRemove.config(text=self.removeRelatedText[self.removingRelated])
+
+	def manipulateRelated(self):
+		if self.displayID != self.displayIDNone:
+			selection : list[int] = self.getSelectedIDs()
+			thought : Thought = self.stream.getThought(self.displayID)
+			relList : list[Thought] = []
+			for ID in selection:
+				relList.append(self.stream.getThought(ID))
+
+			if self.addingRelated:
+				thought.addRelatedList(relList)
+
+			if self.removingRelated:
+				thought.removeRelatedList(relList)
+
+		self.stream.saveToJSON()
+
+
+
 
 
 main = MainWindow()

@@ -2,6 +2,7 @@ from Thought import Thought
 from typing import List
 import json
 from datetime import datetime
+from os import listdir
 
 
 class Stream:
@@ -69,6 +70,11 @@ class Stream:
 			thought = Thought(tID, tString, tTime)
 			self.addThought(thought)
 
+		# The relations need to be loaded second for the case that there are any thoughts that relate to thoughts not yet loaded.
+		for ID in loadDict:
+			thoughtData = loadDict[ID]
+			tID : int = thoughtData["id"]
+			thought = self.getThought(tID)
 			for rID in thoughtData["related"]:
 				thought.addRelated(self.getThought(rID))
 
@@ -84,6 +90,13 @@ class Stream:
 			json.dump(saveDict, save, indent=4)
 
 
+def getAllStreamNames() -> list[str]:
+	streamNames = []
+	for f in listdir("saves"):
+		streamNames.append(f.split('.')[0])
+
+	return streamNames
+
 # s = Stream("default")
 # # a = Thought(s.newID(), "wow")
 # # s.addThought(a)
@@ -98,3 +111,5 @@ class Stream:
 # s.loadFromJSON()
 # for t in s.getThoughts():
 # 	print(s.getThoughts()[t])
+
+# print(getAllStreamNames())
