@@ -86,6 +86,7 @@ class MainWindow(Tk):
 
 	def windowSetup(self):
 		self.title(self.wTitle)
+		self.iconbitmap("stream.ico")
 		self.geometry(str(self.wWidth) + "x" + str(self.wHeight) + "+" + str(self.wOffsetX) + "+" + str(self.wOffsetY))
 
 
