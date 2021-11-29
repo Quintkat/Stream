@@ -18,16 +18,17 @@ class MainWindow(Tk):
 	cText = "black"
 	cGhostText = "grey"
 	style : dict = {
-			"cText" : "#E1E1E1",
-			"cGhostText" : "grey",
-			# "cButton" : "#424242",
-			# "cWindow" : "#212121",
-			# "cFrame" : "#212121",
+			"cText" : "#CFCFCF",
+			"cGhostText" : "#757575",
 			"cLabelframeBorder" : "#424242",
 			"cbg1" : "#212121",
 			"cbg2" : "#424242",
 			"cbg3" : "#616161",
 			"cbg4" : "#757575",
+			"borderFlush" : 0,
+			"border" : 1,
+			"fText" : ("Helvetica", 9),
+			"fTextLarge" : ("Calibri", 12),
 	}
 
 	# GUI elements
@@ -94,6 +95,7 @@ class MainWindow(Tk):
 		self.frameThoughtSetup()
 		self.frameTableSetup()
 		self.styleSetup()
+		self.afterStyleSetup()
 
 
 	def streamSetup(self):
@@ -126,9 +128,9 @@ class MainWindow(Tk):
 		entry.bind("<FocusIn>", self.entryStreamFocusIn)
 		entry.bind("<FocusOut>", self.entryStreamFocusOut)
 		entry.bind("<Return>", self.entryCreateStream)
-		self.entryStreamFocusOut(0)
 
 	def entryStreamFocusIn(self, a):
+		print("lk")
 		if self.entryStream["fg"] == self.style["cGhostText"]:
 			self.entryStream.delete(0, END)
 			self.entryStream.config(fg=self.style["cText"])
@@ -137,7 +139,7 @@ class MainWindow(Tk):
 		text = self.entryStream.get()
 		if text == "":
 			self.entryStream.delete(0, END)
-			self.entryStream.config(fg=self.style["cGhostText"])
+			self.entryStream["fg"] = self.style["cGhostText"]
 			self.entryStream.insert(0, "New Stream")
 
 	def entryCreateStream(self, a):
@@ -340,13 +342,15 @@ class MainWindow(Tk):
 		self.labelThoughtSetup()
 
 	def textThoughtSetup(self):
-		text = Text(self.frameThought, width=25, padx=2, height=18)
+		text = Text(self.frameThought, width=25, padx=2, height=16)
 		self.textThought = text
 		text.grid(column=0, row=3, columnspan=2, sticky='ns', padx=self.padX, pady=self.padY)
 		text.insert(END, "uwu")
 		text.bind("<Return>", self.textThoughtUpdate)
+		text.bind("<KeyRelease-Return>", self.textThoughtAfterEnter)
 
 	def updateTextThought(self, a):
+		print("weawew")
 		selection = self.getSelectedIDs()
 
 		if len(selection) == 1:
@@ -359,15 +363,18 @@ class MainWindow(Tk):
 			self.labelThoughtVal.set(thought.strIDDatetime())
 
 	def textThoughtUpdate(self, a):
-		selection = self.getSelectedIDs()
-		if len(selection) == 1:
-			ID = int(selection[0])
+		if self.displayID != self.displayIDNone:
+			ID = self.displayID
 			thought : Thought = self.stream.getThought(ID)
 			thought.setText(self.textThought.get(1.0, 'end-1c'))		# Edit the thought (have to keep the trailing \n in mind)
 			self.stream.saveToJSON()									# Save the stream
 			self.updateTable()											# Update the entire table
 			self.textThought.delete(1.0, END)							# Re-update the text with the updated text
 			self.textThought.insert(1.0, thought.text())
+
+	def textThoughtAfterEnter(self, a):
+		self.textThought.delete('end-1c', END)
+
 
 	def buttonDeleteSetup(self):
 		button = Button(self.frameThought, text="Delete Thought", command=self.deleteThought)
@@ -512,25 +519,35 @@ class MainWindow(Tk):
 			entry["bg"] = s["cbg2"]
 			entry["fg"] = s["cText"]
 			entry["bd"] = 1
+			entry["relief"] = SUNKEN
 
-		# for table in tables:
-		# 	style = ttk.Style()
-		# 	style.configure("Treeview",
-		# 					fieldbackground=s["cbg2"]
-		# 					)
+		style = ttk.Style()
+		style.theme_use("default")
+		style.configure("Treeview",
+						background=s["cbg1"],
+						foreground=s["cText"],
+						fieldbackground=s["cbg1"],
+						# font=s["fText"]
+						)
+		style.configure("Treeview.Heading",
+						background=s["cbg1"],
+						foreground=s["cText"],
+						)
+		style.map("Treeview",
+				  background=[('selected', s["cbg2"])])
 
 		for text in texts:
 			text["bg"] = s["cbg2"]
 			text["fg"] = s["cText"]
-			text["bd"] = 0
+			text["bd"] = s["borderFlush"]
+			text["font"] = s["fTextLarge"]
 
 		for button in buttons:
 			button["bg"] = s["cbg2"]
-			# button["highlightcolor"] = s["cbg3"]
 			button["activebackground"] = s["cbg3"]
 			button["fg"] = s["cText"]
 			button["activeforeground"] = s["cText"]
-			button["bd"] = 0
+			button["bd"] = s["borderFlush"]
 
 		for check in checks:
 			check["bg"] = s["cbg1"]
@@ -548,12 +565,14 @@ class MainWindow(Tk):
 			option["fg"] = s["cText"]
 			option["activebackground"] = s["cbg3"]
 			option["activeforeground"] = s["cText"]
-			option["bd"] = 0
-			option["highlightthickness"] = 0
+			option["bd"] = s["borderFlush"]
+			option["highlightthickness"] = s["borderFlush"]
 			option["menu"]["bg"] = s["cbg3"]
 			option["menu"]["fg"] = s["cText"]
-			# option["menu"]["borderwidth"] = 0
-			# option[""]
+
+	def afterStyleSetup(self):
+		self.entryStreamFocusOut(0)
+
 
 
 main = MainWindow()
