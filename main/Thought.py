@@ -58,7 +58,7 @@ class Thought:
 		return self.data["string"]
 
 	def setRelated(self, related : List[Thought]):
-		self.data["related"] = related
+		self.addRelatedList(related)
 
 	def addRelated(self, related : Thought):
 		if related not in self.data["related"] and related.id != self.id():

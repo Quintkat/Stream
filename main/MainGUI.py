@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-# from ttkthemes import themed_tk as tk
+from math import floor, log
 
 from Thought import Thought
 from Stream import Stream, getAllStreamNames
@@ -43,8 +43,9 @@ class MainWindow(Tk):
 	# Stream vars
 	optionStreamVal : StringVar
 
-	# TableStream settings
+	# TableStream vars
 	tableStreamColumns : list[str] = ["date", "time", "thought"]
+	maxTableID : int = 0
 
 	# Stream saves
 	stream : Stream
@@ -215,10 +216,30 @@ class MainWindow(Tk):
 			info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
 			table.insert(parent='', index='end', iid=tID, text=str(tID), values=info)
 
+		self.maxTableID = max(thoughts)
+		for tID in thoughts:
+			thought = thoughts[tID]
+			offspring = thought.offspring()
+			# print(tID, offspring)
+			for off in offspring:
+				info = (off.timeStrDate(), off.timeStrTime(), off.text())
+				table.insert(parent=str(tID), index='end', iid=self.idOGToChild(off.id(), tID), text=str(off.id()), values=info)
+
 	def updateTableSingle(self, thoughtID):
-		thought = self.stream.getThought(thoughtID)
-		info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
-		self.tableStream.insert(parent='', index='end', iid=thought.id(), text=str(thought.id()), values=info)
+		if len(self.stream.getThought(thoughtID).related()) > 0:
+			self.updateTable()
+		else:
+			thought = self.stream.getThought(thoughtID)
+			info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
+			self.tableStream.insert(parent='', index='end', iid=thought.id(), text=str(thought.id()), values=info)
+
+	def idOGToChild(self, cID : int, pID : int) -> int:
+		OOM = floor(log(self.maxTableID, 10))
+		return pID*pow(10, OOM + 3) + cID
+
+	def idChildToOG(self, cID : int, pID : int) -> int:
+		OOM = floor(log(self.maxTableID, 10))
+		return cID - pID*pow(10, OOM + 3)
 
 	def tableButtonRelease(self, a):
 		if self.addingRelated:
@@ -231,10 +252,13 @@ class MainWindow(Tk):
 			self.updateTextThought(0)
 
 	def getSelectedIDs(self) -> list[int]:
-		# TODO: extend later with child formatting
 		s = []
-		for ID in self.tableStream.selection():
-			s.append(int(ID))
+		for i in self.tableStream.selection():
+			ID = int(i)
+			if self.tableStream.parent(ID) != '':
+				s.append(self.idChildToOG(ID, int(self.tableStream.parent(ID))))
+			else:
+				s.append(ID)
 		return s
 
 	def entryThoughtSetup(self):
@@ -398,9 +422,6 @@ class MainWindow(Tk):
 				thought.removeRelatedList(relList)
 
 		self.stream.saveToJSON()
-
-
-
 
 
 main = MainWindow()
