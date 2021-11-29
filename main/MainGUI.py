@@ -17,6 +17,18 @@ class MainWindow(Tk):
 	# Style settings
 	cText = "black"
 	cGhostText = "grey"
+	style : dict = {
+			"cText" : "#E1E1E1",
+			"cGhostText" : "grey",
+			# "cButton" : "#424242",
+			# "cWindow" : "#212121",
+			# "cFrame" : "#212121",
+			"cLabelframeBorder" : "#424242",
+			"cbg1" : "#212121",
+			"cbg2" : "#424242",
+			"cbg3" : "#616161",
+			"cbg4" : "#757575",
+	}
 
 	# GUI elements
 	padX = 5
@@ -24,7 +36,6 @@ class MainWindow(Tk):
 	frameTable : Frame
 	entryThought : Entry
 	tableStream : ttk.Treeview
-	frameLeft : Frame
 	frameThought : LabelFrame
 	textThought : Text
 	buttonDelete : Button
@@ -82,12 +93,12 @@ class MainWindow(Tk):
 		self.frameStreamSetup()
 		self.frameThoughtSetup()
 		self.frameTableSetup()
+		self.styleSetup()
 
 
 	def streamSetup(self):
 		self.stream = Stream(self.streamDefault)
 		self.stream.loadFromJSON()
-		# self.switchStream(, False)
 
 	def switchStream(self, name : str, updateTable : bool = True):
 		self.stream.saveToJSON()
@@ -118,15 +129,15 @@ class MainWindow(Tk):
 		self.entryStreamFocusOut(0)
 
 	def entryStreamFocusIn(self, a):
-		if self.entryStream["fg"] == self.cGhostText:
+		if self.entryStream["fg"] == self.style["cGhostText"]:
 			self.entryStream.delete(0, END)
-			self.entryStream.config(fg=self.cText)
+			self.entryStream.config(fg=self.style["cText"])
 
 	def entryStreamFocusOut(self, a):
 		text = self.entryStream.get()
 		if text == "":
 			self.entryStream.delete(0, END)
-			self.entryStream.config(fg=self.cGhostText)
+			self.entryStream.config(fg=self.style["cGhostText"])
 			self.entryStream.insert(0, "New Stream")
 
 	def entryCreateStream(self, a):
@@ -139,6 +150,7 @@ class MainWindow(Tk):
 		self.updateStreamNameList()
 		self.updateOptionStream(newName)
 		self.switchStream(newName)
+		self.styleSetup()
 
 	def labelStreamSetup(self):
 		label = Label(self.frameStream, text="Current Stream:")
@@ -444,6 +456,104 @@ class MainWindow(Tk):
 
 		self.stream.saveToJSON()
 		self.updateTable()
+
+
+	def styleSetup(self):
+		s = self.style
+		windows = [self, ]
+		frames = [
+				self.frameTable,
+		]
+		labelframes = [
+				self.frameThought,
+				self.frameStream,
+		]
+		entrys = [
+				self.entryThought,
+				self.entryStream,
+		]
+		tables = [
+				self.tableStream,
+		]
+		texts = [
+				self.textThought,
+		]
+		buttons = [
+				self.buttonDelete,
+				self.buttonStream,
+				self.buttonRelatedShow,
+				self.buttonRelatedAdd,
+				self.buttonRelatedRemove,
+		]
+		checks = [
+				self.checkRelated,
+		]
+		labels = [
+				self.labelStream,
+				self.labelThought,
+		]
+		options = [
+				self.optionStream,
+		]
+
+		for window in windows:
+			window["bg"] = s["cbg1"]
+
+		for frame in frames:
+			frame["bg"] = s["cbg1"]
+
+		for labelframe in labelframes:
+			labelframe["bg"] = s["cbg1"]
+			labelframe["fg"] = s["cText"]
+			labelframe["bd"] = 1
+			# labelframe["highlightbackground"] = s["cWindow"]
+
+		for entry in entrys:
+			entry["bg"] = s["cbg2"]
+			entry["fg"] = s["cText"]
+			entry["bd"] = 1
+
+		# for table in tables:
+		# 	style = ttk.Style()
+		# 	style.configure("Treeview",
+		# 					fieldbackground=s["cbg2"]
+		# 					)
+
+		for text in texts:
+			text["bg"] = s["cbg2"]
+			text["fg"] = s["cText"]
+			text["bd"] = 0
+
+		for button in buttons:
+			button["bg"] = s["cbg2"]
+			# button["highlightcolor"] = s["cbg3"]
+			button["activebackground"] = s["cbg3"]
+			button["fg"] = s["cText"]
+			button["activeforeground"] = s["cText"]
+			button["bd"] = 0
+
+		for check in checks:
+			check["bg"] = s["cbg1"]
+			check["fg"] = s["cText"]
+			check["activebackground"] = s["cbg1"]
+			check["activeforeground"] = s["cText"]
+			check["selectcolor"] = s["cbg2"]
+
+		for label in labels:
+			label["bg"] = s["cbg1"]
+			label["fg"] = s["cText"]
+
+		for option in options:
+			option["bg"] = s["cbg2"]
+			option["fg"] = s["cText"]
+			option["activebackground"] = s["cbg3"]
+			option["activeforeground"] = s["cText"]
+			option["bd"] = 0
+			option["highlightthickness"] = 0
+			option["menu"]["bg"] = s["cbg3"]
+			option["menu"]["fg"] = s["cText"]
+			# option["menu"]["borderwidth"] = 0
+			# option[""]
 
 
 main = MainWindow()
