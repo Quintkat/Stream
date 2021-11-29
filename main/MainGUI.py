@@ -78,20 +78,21 @@ class MainWindow(Tk):
 
 
 	def environmentSetup(self):
-		self.stream = Stream(self.streamDefault)
-		self.stream.loadFromJSON()
-		# self.frameLeftSetup()
+		self.streamSetup()
 		self.frameStreamSetup()
 		self.frameThoughtSetup()
 		self.frameTableSetup()
 
-	# def frameLeftSetup(self):
-	# 	frame = Frame(self)
-	# 	self.frameLeft = frame
-	# 	frame.grid(column=0, row=1, rowspan=2)
-	#
-	# 	self.frameStreamSetup()
-	# 	self.frameThoughtSetup()
+
+	def streamSetup(self):
+		self.switchStream(self.streamDefault, False)
+
+	def switchStream(self, name : str, updateTable : bool = True):
+		self.stream = Stream(name)
+		self.stream.loadFromJSON()
+		if updateTable:
+			self.updateTable()
+
 
 	def frameStreamSetup(self):
 		frame = LabelFrame(self, text="Stream")
@@ -126,17 +127,30 @@ class MainWindow(Tk):
 			self.entryStream.insert(0, "New Stream")
 
 	def entryCreateStream(self, a):
-		pass
+		newName = self.entryStream.get()
+		if newName == "":
+			return
+
+		newStream = Stream(newName)
+		newStream.saveToJSON()
+		self.updateStreamNameList()
+		self.updateOptionStream(newName)
+		self.switchStream(newName)
 
 	def labelStreamSetup(self):
 		label = Label(self.frameStream, text="Current Stream:")
 		self.labelStream = label
 		label.grid(column=0, row=1, sticky="w", padx=self.padX, pady=self.padY)
 
-	def optionStreamSetup(self):
+	def optionStreamSetup(self, standardSelection : str = ""):
 		self.updateStreamNameList()
 		self.optionStreamVal = StringVar()
-		self.optionStreamVal.set(self.streamNameList[0])
+		if standardSelection == "":
+			self.optionStreamVal.set(self.streamDefault)
+		else:
+			print(standardSelection)
+			self.optionStreamVal.set(standardSelection)
+
 		option = OptionMenu(self.frameStream, self.optionStreamVal, *self.streamNameList, command=self.displayStreamOption)
 		self.optionStream = option
 		option.grid(column=1, row=1, padx=self.padX, pady=self.padY)
@@ -145,10 +159,13 @@ class MainWindow(Tk):
 	def updateStreamNameList(self):
 		self.streamNameList = getAllStreamNames()
 
+	def updateOptionStream(self, name : str = ""):
+		self.optionStream.destroy()
+		self.optionStreamSetup(name)
+
 	def displayStreamOption(self, a):
 		streamName = self.optionStreamVal.get()
-		print(streamName)
-		pass
+		self.switchStream(streamName)
 
 	def buttonStreamSetup(self):
 		button = Button(self.frameStream, text="Refresh Stream", command=self.buttonStreamRefresh)
@@ -216,14 +233,15 @@ class MainWindow(Tk):
 			info = (thought.timeStrDate(), thought.timeStrTime(), thought.text())
 			table.insert(parent='', index='end', iid=tID, text=str(tID), values=info)
 
-		self.maxTableID = max(thoughts)
-		for tID in thoughts:
-			thought = thoughts[tID]
-			offspring = thought.offspring()
-			# print(tID, offspring)
-			for off in offspring:
-				info = (off.timeStrDate(), off.timeStrTime(), off.text())
-				table.insert(parent=str(tID), index='end', iid=self.idOGToChild(off.id(), tID), text=str(off.id()), values=info)
+		if len(thoughts) > 0:
+			self.maxTableID = max(thoughts)
+			for tID in thoughts:
+				thought = thoughts[tID]
+				offspring = thought.offspring()
+				# print(tID, offspring)
+				for off in offspring:
+					info = (off.timeStrDate(), off.timeStrTime(), off.text())
+					table.insert(parent=str(tID), index='end', iid=self.idOGToChild(off.id(), tID), text=str(off.id()), values=info)
 
 	def updateTableSingle(self, thoughtID):
 		if len(self.stream.getThought(thoughtID).related()) > 0:
