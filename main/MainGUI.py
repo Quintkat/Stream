@@ -85,9 +85,12 @@ class MainWindow(Tk):
 
 
 	def streamSetup(self):
-		self.switchStream(self.streamDefault, False)
+		self.stream = Stream(self.streamDefault)
+		self.stream.loadFromJSON()
+		# self.switchStream(, False)
 
 	def switchStream(self, name : str, updateTable : bool = True):
+		self.stream.saveToJSON()
 		self.stream = Stream(name)
 		self.stream.loadFromJSON()
 		if updateTable:
@@ -440,6 +443,7 @@ class MainWindow(Tk):
 				thought.removeRelatedList(relList)
 
 		self.stream.saveToJSON()
+		self.updateTable()
 
 
 main = MainWindow()
