@@ -123,7 +123,7 @@ class MainWindow(Tk):
 		self.buttonStreamSetup()
 
 	def entryStreamSetup(self):
-		entry = Entry(self.frameStream, exportselection=0, width=30)
+		entry = Entry(self.frameStream, exportselection=0, width=33)
 		self.entryStream = entry
 		entry.grid(column=0, row=0, columnspan=2, padx=self.padX, pady=self.padY, sticky='ew')
 		entry.bind("<FocusIn>", self.entryStreamFocusIn)
@@ -170,8 +170,12 @@ class MainWindow(Tk):
 			self.optionStreamVal.set(standardSelection)
 
 		option = OptionMenu(self.frameStream, self.optionStreamVal, *self.streamNameList, command=self.displayStreamOption)
+		# option = ttk.Combobox(self.frameStream, textvariable=self.optionStreamVal)
+		# option["values"] = self.streamNameList
+		# option["state"] = "readonly"
+		# option.bind("<<ComboboxSelected>>", self.displayStreamOption)
 		self.optionStream = option
-		option.grid(column=1, row=1, padx=self.padX, pady=self.padY)
+		option.grid(column=1, row=1, padx=self.padX, pady=self.padY, sticky='e')
 		option.config(width=10)
 
 	def updateStreamNameList(self):
@@ -536,6 +540,14 @@ class MainWindow(Tk):
 						)
 		style.map("Treeview",
 				  background=[('selected', s["cbg2"])])
+		style.map("Treeview.Heading",
+				  background=[('active', s["cbg2"])])
+
+		# style.configure("TCombobox",
+		# 				background=s["cbg2"],
+		# 				foreground=s["cText"],
+		# 				fieldbackground=s["cbg2"])
+		# style.map("TCombobox")
 
 		for text in texts:
 			text["bg"] = s["cbg2"]
