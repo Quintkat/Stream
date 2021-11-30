@@ -1,5 +1,4 @@
 from Thought import Thought
-from typing import List
 import json
 from datetime import datetime
 from os import listdir
@@ -56,12 +55,12 @@ class Stream:
 	def loadFromJSON(self):
 		loadDict : dict
 		sf = self.saveFileName()
+
 		with open(sf) as load:
 			loadDict = json.load(load)
 
 		# At this point, loadDict is structured as dict[str, dict]
 		# The second dict has the saves to be turned into Thoughts and the string is the string version of the integer IDs
-		# print(loadDict)
 		for ID in loadDict:
 			thoughtData = loadDict[ID]
 			tID : int = thoughtData["id"]
@@ -96,20 +95,3 @@ def getAllStreamNames() -> list[str]:
 		streamNames.append(f.split('.')[0])
 
 	return streamNames
-
-# s = Stream("default")
-# # a = Thought(s.newID(), "wow")
-# # s.addThought(a)
-# # b = Thought(s.newID(), "aaaa")
-# # s.addThought(b)
-# # c = Thought(s.newID(), "helasdlkajs")
-# # s.addThought(c)
-# # d = Thought(s.newID(), "penis")
-# # s.addThought(d)
-# # d.addRelatedList([a, c])
-# # s.saveToJSON()
-# s.loadFromJSON()
-# for t in s.getThoughts():
-# 	print(s.getThoughts()[t])
-
-# print(getAllStreamNames())

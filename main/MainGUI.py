@@ -101,6 +101,9 @@ class MainWindow(Tk):
 
 	def streamSetup(self):
 		self.stream = Stream(self.streamDefault)
+		if self.streamDefault not in getAllStreamNames():
+			self.stream.saveToJSON()
+
 		self.stream.loadFromJSON()
 
 	def switchStream(self, name : str, updateTable : bool = True):
@@ -115,7 +118,6 @@ class MainWindow(Tk):
 		frame = LabelFrame(self, text="Stream")
 		self.frameStream = frame
 		frame.grid(column=0, row=1, padx=self.padX, pady=self.padY, sticky='ewn')
-		# frame.pack(side="top")
 
 		self.entryStreamSetup()
 		self.labelStreamSetup()
@@ -170,10 +172,6 @@ class MainWindow(Tk):
 			self.optionStreamVal.set(standardSelection)
 
 		option = OptionMenu(self.frameStream, self.optionStreamVal, *self.streamNameList, command=self.displayStreamOption)
-		# option = ttk.Combobox(self.frameStream, textvariable=self.optionStreamVal)
-		# option["values"] = self.streamNameList
-		# option["state"] = "readonly"
-		# option.bind("<<ComboboxSelected>>", self.displayStreamOption)
 		self.optionStream = option
 		option.grid(column=1, row=1, padx=self.padX, pady=self.padY, sticky='e')
 		option.config(width=10)
@@ -202,7 +200,6 @@ class MainWindow(Tk):
 		frame = Frame(self)
 		self.frameTable = frame
 		frame.grid(column=1, row=1, padx=self.padX, pady=self.padY, rowspan=2)
-		# frame.pack(side="right", fill='x')
 
 		self.tableSetup()
 		self.entryThoughtSetup()
@@ -235,7 +232,6 @@ class MainWindow(Tk):
 		table.bind("<ButtonRelease-1>", self.tableButtonRelease)
 
 		# Settings
-		# table["selectmode"] = "browse"
 		table["height"] = 27
 
 	def updateTable(self, query : list[int] = None):
@@ -337,7 +333,6 @@ class MainWindow(Tk):
 		frame = LabelFrame(self, text="Thought")
 		self.frameThought = frame
 		frame.grid(column=0, row=2, padx=self.padX, pady=self.padY, sticky='ns')
-		# frame.pack(side="bottom", expand=True)
 
 		self.textThoughtSetup()
 		self.buttonDeleteSetup()
@@ -542,12 +537,6 @@ class MainWindow(Tk):
 				  background=[('selected', s["cbg2"])])
 		style.map("Treeview.Heading",
 				  background=[('active', s["cbg2"])])
-
-		# style.configure("TCombobox",
-		# 				background=s["cbg2"],
-		# 				foreground=s["cText"],
-		# 				fieldbackground=s["cbg2"])
-		# style.map("TCombobox")
 
 		for text in texts:
 			text["bg"] = s["cbg2"]
