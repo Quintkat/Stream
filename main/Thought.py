@@ -134,4 +134,3 @@ class Thought:
 		# 	newData["offspring"].append(o.id())
 
 		return newData
-

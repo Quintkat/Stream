@@ -88,6 +88,19 @@ class Stream:
 		with open(sf, 'w') as save:
 			json.dump(saveDict, save, indent=4)
 
+	def getFiltered(self, query : str) -> dict[int, Thought]:
+		allThoughts = self.getThoughts()
+		filtered : dict[int, Thought] = {}
+
+		
+
+		for tID in allThoughts:
+			thought = allThoughts[tID]
+			if query in thought.text():
+				filtered[tID] = thought
+
+		return filtered
+
 
 def getAllStreamNames() -> list[str]:
 	streamNames = []

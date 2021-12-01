@@ -37,6 +37,7 @@ class MainWindow(Tk):
 	frameTable : Frame
 	entryThought : Entry
 	tableStream : ttk.Treeview
+	entrySearch : Entry
 	frameThought : LabelFrame
 	textThought : Text
 	buttonDelete : Button
@@ -133,7 +134,6 @@ class MainWindow(Tk):
 		entry.bind("<Return>", self.entryCreateStream)
 
 	def entryStreamFocusIn(self, a):
-		print("lk")
 		if self.entryStream["fg"] == self.style["cGhostText"]:
 			self.entryStream.delete(0, END)
 			self.entryStream.config(fg=self.style["cText"])
@@ -188,7 +188,7 @@ class MainWindow(Tk):
 		self.switchStream(streamName)
 
 	def buttonStreamSetup(self):
-		button = Button(self.frameStream, text="Refresh Stream", command=self.buttonStreamRefresh)
+		button = Button(self.frameStream, text="Refresh Stream/Clear Filter", command=self.buttonStreamRefresh)
 		self.buttonStream = button
 		button.grid(column=0, row=2, columnspan=2, sticky="ew", padx=2*self.padX, pady=self.padY)
 
@@ -204,6 +204,7 @@ class MainWindow(Tk):
 		self.tableSetup()
 		self.entryThoughtSetup()
 		self.relatedSetup()
+		self.entrySearchSetup()
 
 	def tableSetup(self):
 		table = ttk.Treeview(self.frameTable)
@@ -226,13 +227,13 @@ class MainWindow(Tk):
 		self.updateTable()
 
 		# Positioning
-		table.grid(column=0, row=0, padx=self.padX, pady=0, columnspan=2)
+		table.grid(column=0, row=1, padx=self.padX, pady=0, columnspan=2)
 
 		# Binding
 		table.bind("<ButtonRelease-1>", self.tableButtonRelease)
 
 		# Settings
-		table["height"] = 27
+		table["height"] = 26
 
 	def updateTable(self, query : list[int] = None):
 		table = self.tableStream
@@ -299,7 +300,7 @@ class MainWindow(Tk):
 
 	def entryThoughtSetup(self):
 		entry = Entry(self.frameTable, exportselection=0, width=106)
-		entry.grid(column=0, row=1, sticky='w', padx=self.padX, pady=self.padY)
+		entry.grid(column=0, row=2, sticky='w', padx=self.padX, pady=self.padY)
 		entry.bind("<Return>", self.entryCreateThought)
 		self.entryThought = entry
 
@@ -326,7 +327,32 @@ class MainWindow(Tk):
 		self.checkRelatedVal = IntVar()
 		check = Checkbutton(self.frameTable, text="Related to selection", variable=self.checkRelatedVal)
 		self.checkRelated = check
-		check.grid(column=1, row=1, sticky='e')
+		check.grid(column=1, row=2, sticky='e')
+
+	def entrySearchSetup(self):
+		entry = Entry(self.frameTable, exportselection=0, width=50)
+		self.entrySearch = entry
+		entry.grid(column=0, row=0, sticky='w', padx=self.padX, pady=self.padY)
+		entry.bind("<FocusIn>", self.entrySearchFocusIn)
+		entry.bind("<FocusOut>", self.entrySearchFocusOut)
+		entry.bind("<Return>", self.entrySearchStream)
+
+	def entrySearchStream(self, a):
+		query = self.entrySearch.get()
+		searchResultIDs : list[int] = list(self.stream.getFiltered(query).keys())
+		self.updateTable(searchResultIDs)
+
+	def entrySearchFocusIn(self, a):
+		if self.entrySearch["fg"] == self.style["cGhostText"]:
+			self.entrySearch.delete(0, END)
+			self.entrySearch.config(fg=self.style["cText"])
+
+	def entrySearchFocusOut(self, a):
+		text = self.entrySearch.get()
+		if text == "":
+			self.entrySearch.delete(0, END)
+			self.entrySearch["fg"] = self.style["cGhostText"]
+			self.entrySearch.insert(0, "Search")
 
 
 	def frameThoughtSetup(self):
@@ -478,6 +504,7 @@ class MainWindow(Tk):
 		entrys = [
 				self.entryThought,
 				self.entryStream,
+				self.entrySearch,
 		]
 		tables = [
 				self.tableStream,
@@ -574,6 +601,7 @@ class MainWindow(Tk):
 
 	def afterStyleSetup(self):
 		self.entryStreamFocusOut(0)
+		self.entrySearchFocusOut(0)
 
 
 
