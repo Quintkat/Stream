@@ -38,6 +38,7 @@ class MainWindow(Tk):
 	entryThought : Entry
 	tableStream : ttk.Treeview
 	entrySearch : Entry
+	# checkRelatedSearch : Checkbutton
 	frameThought : LabelFrame
 	textThought : Text
 	buttonDelete : Button
@@ -168,7 +169,6 @@ class MainWindow(Tk):
 		if standardSelection == "":
 			self.optionStreamVal.set(self.streamDefault)
 		else:
-			print(standardSelection)
 			self.optionStreamVal.set(standardSelection)
 
 		option = OptionMenu(self.frameStream, self.optionStreamVal, *self.streamNameList, command=self.displayStreamOption)
@@ -257,7 +257,6 @@ class MainWindow(Tk):
 			for tID in thoughts:
 				thought = thoughts[tID]
 				offspring = thought.offspring()
-				# print(tID, offspring)
 				for off in offspring:
 					info = (off.timeStrDate(), off.timeStrTime(), off.text())
 					table.insert(parent=str(tID), index='end', iid=self.idOGToChild(off.id(), tID), text=str(off.id()), values=info)
@@ -339,7 +338,12 @@ class MainWindow(Tk):
 
 	def entrySearchStream(self, a):
 		query = self.entrySearch.get()
-		searchResultIDs : list[int] = list(self.stream.getFiltered(query).keys())
+		relatedFlag = "#rel"
+		relID = self.displayIDNone
+		if relatedFlag in query:
+			relID = self.displayID
+
+		searchResultIDs : list[int] = list(self.stream.getFiltered(query.replace(relatedFlag, '').strip(' '), relID).keys())
 		self.updateTable(searchResultIDs)
 
 	def entrySearchFocusIn(self, a):
@@ -376,7 +380,6 @@ class MainWindow(Tk):
 		text.bind("<KeyRelease-Return>", self.textThoughtAfterEnter)
 
 	def updateTextThought(self, a):
-		print("weawew")
 		selection = self.getSelectedIDs()
 
 		if len(selection) == 1:
@@ -602,7 +605,6 @@ class MainWindow(Tk):
 	def afterStyleSetup(self):
 		self.entryStreamFocusOut(0)
 		self.entrySearchFocusOut(0)
-
 
 
 main = MainWindow()

@@ -88,15 +88,21 @@ class Stream:
 		with open(sf, 'w') as save:
 			json.dump(saveDict, save, indent=4)
 
-	def getFiltered(self, query : str) -> dict[int, Thought]:
+	def getFiltered(self, query : str, related : int = -1) -> dict[int, Thought]:
 		allThoughts = self.getThoughts()
 		filtered : dict[int, Thought] = {}
 
-		
-
+		# Filter on text
 		for tID in allThoughts:
 			thought = allThoughts[tID]
-			if query in thought.text():
+			include = True
+			if query not in thought.text():
+				include = False
+			if related != -1:
+				if allThoughts[related] not in thought.offspring():
+					include = False
+
+			if include:
 				filtered[tID] = thought
 
 		return filtered
