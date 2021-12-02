@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from math import floor, log
+from shutil import copy
 
 from Thought import Thought
 from Stream import Stream, getAllStreamNames
@@ -38,7 +39,8 @@ class MainWindow(Tk):
 	entryThought : Entry
 	tableStream : ttk.Treeview
 	entrySearch : Entry
-	# checkRelatedSearch : Checkbutton
+	buttonExit : Button
+	buttonBackup : Button
 	frameThought : LabelFrame
 	textThought : Text
 	buttonDelete : Button
@@ -205,6 +207,8 @@ class MainWindow(Tk):
 		self.entryThoughtSetup()
 		self.relatedSetup()
 		self.entrySearchSetup()
+		self.buttonExitSetup()
+		self.buttonBackupSetup()
 
 	def tableSetup(self):
 		table = ttk.Treeview(self.frameTable)
@@ -358,6 +362,23 @@ class MainWindow(Tk):
 			self.entrySearch["fg"] = self.style["cGhostText"]
 			self.entrySearch.insert(0, "Search")
 
+	def buttonExitSetup(self):
+		button = Button(self.frameTable, text="Quit", command=self.exit)
+		self.buttonExit = button
+		button.grid(column=1, row=0, sticky='e', padx=self.padX, pady=self.padY)
+
+	def exit(self):
+		self.destroy()
+
+	def buttonBackupSetup(self):
+		button = Button(self.frameTable, text="Backup Streams", command=self.backup)
+		self.buttonBackup = button
+		button.grid(column=1, row=0, sticky='w', pady=self.padY)
+
+	def backup(self):
+		for sName in getAllStreamNames():
+			copy("saves/" + sName + ".json", "backup/")
+
 
 	def frameThoughtSetup(self):
 		frame = LabelFrame(self, text="Thought")
@@ -372,7 +393,7 @@ class MainWindow(Tk):
 		self.labelThoughtSetup()
 
 	def textThoughtSetup(self):
-		text = Text(self.frameThought, width=25, padx=2, height=16)
+		text = Text(self.frameThought, width=25, padx=2, height=16, wrap=WORD)
 		self.textThought = text
 		text.grid(column=0, row=3, columnspan=2, sticky='ns', padx=self.padX, pady=self.padY)
 		text.insert(END, "uwu")
@@ -521,6 +542,8 @@ class MainWindow(Tk):
 				self.buttonRelatedShow,
 				self.buttonRelatedAdd,
 				self.buttonRelatedRemove,
+				self.buttonBackup,
+				self.buttonExit,
 		]
 		checks = [
 				self.checkRelated,
