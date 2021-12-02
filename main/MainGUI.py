@@ -377,7 +377,7 @@ class MainWindow(Tk):
 
 	def backup(self):
 		for sName in getAllStreamNames():
-			copy("saves/" + sName + ".json", "backup/")
+			copy("saves/" + sName + ".json", "backups/")
 
 
 	def frameThoughtSetup(self):
